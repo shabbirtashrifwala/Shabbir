@@ -1,0 +1,110 @@
+import pygame
+import random
+
+# Define some colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)
+
+# Set up the screen
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+pygame.init()
+screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
+pygame.display.set_caption("Dodge The Obstacles")
+
+# Set up the clock
+clock = pygame.time.Clock()
+
+# Set up the player
+player_width = 40
+player_height = 60
+player_x = 50
+player_y = SCREEN_HEIGHT - player_height - 50
+player_y_velocity = 0
+
+# Set up the obstacles
+obstacle_width = 50
+obstacle_height = 50
+obstacles = []
+obstacle_spawn_rate = 60
+obstacle_speed = 5
+obstacle_score = 0
+
+# Set up the font
+font = pygame.font.Font(None, 36)
+
+# Function to draw the player
+def draw_player():
+    pygame.draw.rect(screen, GREEN, [player_x, player_y, player_width, player_height])
+
+# Function to draw the obstacles
+def draw_obstacles():
+    for obstacle in obstacles:
+        pygame.draw.rect(screen, WHITE, [obstacle[0], obstacle[1], obstacle_width, obstacle_height])
+
+# Function to spawn obstacles
+def spawn_obstacle():
+    obstacles.append([SCREEN_WIDTH, random.randint(0, SCREEN_HEIGHT - obstacle_height)])
+
+# Function to update the score
+def update_score():
+    score_text = font.render("Score: " + str(obstacle_score), True, WHITE)
+    screen.blit(score_text, [10, 10])
+
+# Main game loop
+running = True
+while running:
+
+    # Handle events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                player_y_velocity = -10
+
+    # Move the player
+    player_y += player_y_velocity
+    player_y_velocity += 0.5
+
+    # Keep the player within the screen bounds
+    if player_y > SCREEN_HEIGHT - player_height - 50:
+        player_y = SCREEN_HEIGHT - player_height - 50
+        player_y_velocity = 0
+
+    # Spawn obstacles
+    if random.randint(1, obstacle_spawn_rate) == 1:
+        spawn_obstacle()
+
+    # Move obstacles
+    for obstacle in obstacles:
+        obstacle[0] -= obstacle_speed
+
+        # Check for collision with player
+        if obstacle[0] < player_x + player_width and obstacle[0] + obstacle_width > player_x and obstacle[1] < player_y + player_height and obstacle[1] + obstacle_height > player_y:
+            running = False
+
+        # Remove obstacles that have gone off the screen
+        if obstacle[0] < -obstacle_width:
+            obstacles.remove(obstacle)
+            obstacle_score += 1
+
+    # Clear the screen
+    screen.fill(BLACK)
+
+    # Draw the player and obstacles
+    draw_player()
+    draw_obstacles()
+
+    # Update the score
+    update_score()
+
+    # Update the display
+    pygame.display.flip()
+
+    # Set the framerate
+    clock.tick(60)
+
+# Clean up
+pygame.quit()
